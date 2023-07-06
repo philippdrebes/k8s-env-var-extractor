@@ -11,8 +11,6 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	//v1 "k8s.io/api/core/v1"
-	//metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 )
 
@@ -33,7 +31,6 @@ func main() {
 	configs := make(map[string]corev1.ConfigMap)
 	secrets := make(map[string]corev1.Secret)
 
-	// Load all Kubernetes objects from all files in the directory
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -80,6 +77,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Check if the "out" directory exists, if not create one
+	if _, err := os.Stat("out"); os.IsNotExist(err) {
+		os.MkdirAll("out", 0755)
+	}
+
 	for _, deploy := range deployments {
 		envVars := make([]EnvVar, 0)
 
@@ -98,7 +100,7 @@ func main() {
 					} else if env.ValueFrom.SecretKeyRef != nil {
 						secret, ok := secrets[env.ValueFrom.SecretKeyRef.Name]
 						if ok {
-							value = string(secret.Data[env.ValueFrom.SecretKeyRef.Key])
+							value = string(secret.StringData[env.ValueFrom.SecretKeyRef.Key])
 						}
 					}
 				}
@@ -107,11 +109,25 @@ func main() {
 					envVars = append(envVars, EnvVar{Name: env.Name, Value: value, SlotSetting: false})
 				}
 			}
-		}
 
-        if _, err := os.Stat("out"); os.IsNotExist(err) {
-                os.MkdirAll("out", 0755)
-        }
+			for _, envFrom := range container.EnvFrom {
+				if envFrom.ConfigMapRef != nil {
+					config, ok := configs[envFrom.ConfigMapRef.Name]
+					if ok {
+						for k, v := range config.Data {
+							envVars = append(envVars, EnvVar{Name: k, Value: v, SlotSetting: false})
+						}
+					}
+				} else if envFrom.SecretRef != nil {
+					secret, ok := secrets[envFrom.SecretRef.Name]
+					if ok {
+						for k, v := range secret.StringData {
+							envVars = append(envVars, EnvVar{Name: k, Value: string(v), SlotSetting: false})
+						}
+					}
+				}
+			}
+		}
 
 		if len(envVars) > 0 {
 			envVarsJSON, err := json.MarshalIndent(envVars, "", "  ")
@@ -127,4 +143,3 @@ func main() {
 		}
 	}
 }
-
