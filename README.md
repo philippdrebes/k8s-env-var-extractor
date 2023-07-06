@@ -12,8 +12,8 @@ This is a simple Go project that extracts environment variables from Kubernetes 
 The project uses Go Modules for dependency management.
 
 ```bash
-git clone https://github.com/philippdrebes/k8s-yaml-to-azure-converter.git
-cd k8s-yaml-to-azure-converter
+git clone https://github.com/philippdrebes/k8s-env-var-extractor.git
+cd k8s-env-var-extractor
 go build
 ```
 
@@ -21,7 +21,7 @@ go build
 After building the project, you can run the program by specifying the directory path that contains your Kubernetes YAML files:
 
 ```bash
-./k8s-yaml-to-azure-converter <directory>
+./k8s-env-var-extractor <directory>
 ```
 
 The program will recursively scan the specified directory and its subdirectories for YAML files.
