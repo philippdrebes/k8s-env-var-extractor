@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"github.com/alexflint/go-arg"
 	"log"
 	"os"
 	"path/filepath"
@@ -21,23 +21,24 @@ type EnvVar struct {
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		log.Fatal("Usage: ./main <directory>")
+	var args struct {
+		Input  string `arg:"positional,required" placeholder:"SRC" help:"input dir containing YAML files"`
+		Output string `arg:"positional" placeholder:"OUT" help:"output dir for JSON files" default:"./out"`
 	}
 
-	dir := os.Args[1]
+	arg.MustParse(&args)
 
 	var deployments []appsv1.Deployment
 	configs := make(map[string]corev1.ConfigMap)
 	secrets := make(map[string]corev1.Secret)
 
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(args.Input, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
 		if !info.IsDir() {
-			content, err := ioutil.ReadFile(path)
+			content, err := os.ReadFile(path)
 			if err != nil {
 				return err
 			}
@@ -78,8 +79,11 @@ func main() {
 	}
 
 	// Check if the "out" directory exists, if not create one
-	if _, err := os.Stat("out"); os.IsNotExist(err) {
-		os.MkdirAll("out", 0755)
+	if _, err := os.Stat(args.Output); os.IsNotExist(err) {
+		err = os.MkdirAll(args.Output, 0755)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	for _, deploy := range deployments {
@@ -136,7 +140,7 @@ func main() {
 			}
 
 			fileName := fmt.Sprintf("out/%s.json", deploy.Name)
-			err = ioutil.WriteFile(fileName, envVarsJSON, 0644)
+			err = os.WriteFile(fileName, envVarsJSON, 0644)
 			if err != nil {
 				log.Fatal("Error writing JSON to file:", err)
 			}

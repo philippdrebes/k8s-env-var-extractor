@@ -3,11 +3,13 @@ module github.com/philippdrebes/k8s-yaml-to-azure-converter
 go 1.20
 
 require (
+	github.com/alexflint/go-arg v1.4.3
 	k8s.io/api v0.27.3
 	sigs.k8s.io/yaml v1.3.0
 )
 
 require (
+	github.com/alexflint/go-scalar v1.1.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
