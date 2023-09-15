@@ -1,6 +1,6 @@
 module github.com/philippdrebes/k8s-yaml-to-azure-converter
 
-go 1.20
+go 1.21
 
 require (
 	github.com/alexflint/go-arg v1.4.3

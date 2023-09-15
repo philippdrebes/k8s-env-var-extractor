@@ -1,12 +1,14 @@
 package main
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"github.com/alexflint/go-arg"
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -132,6 +134,10 @@ func main() {
 				}
 			}
 		}
+
+		slices.SortFunc(envVars, func(a, b EnvVar) int {
+			return cmp.Compare(a.Name, b.Name)
+		})
 
 		if len(envVars) > 0 {
 			envVarsJSON, err := json.MarshalIndent(envVars, "", "  ")
